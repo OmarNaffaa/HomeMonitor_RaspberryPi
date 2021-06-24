@@ -24,7 +24,7 @@ while True:
 	payload = {'field1': tempF}
 	r = requests.get(uploadUrl, payload);
 	
-	while (!r.ok):
+	while (not r.ok):
 		r = requests.get(uploadUrl, payload)
 
 	print ('Uploaded at: ' + time.ctime())

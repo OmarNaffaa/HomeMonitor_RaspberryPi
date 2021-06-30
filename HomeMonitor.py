@@ -10,18 +10,27 @@ uploadUrl = 'https://api.thingspeak.com/update?api_key=I4BV5Q70NNDWH0SP'
 
 # Poll sensor and upload data once every 30 minutes
 while True:
-	tempC = None
-	humidity, tempC = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+	tempC = [-100, -100]
+	humidity = [-100, -100]
+	
+	for i in range(3):
+		humidity[i], tempC[i] = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
 
-	# Poll until valid temperature is received
-	while (tempC is None):
-		humidity, tempC = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
-
-		if (tempC is not None):
-			tempF = (tempC * 1.8) + 32
+	# Poll until valid temperature is received across 2 samples
+	while (tempC[0] == -100 or tempC[1] == -100):
+		if (tempC[0] == -100):
+			humidity[0], tempC[0] = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+		elif (tempC[1] == -100):
+			humidity[1], tempC[1] = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+		elif (abs(tempC[1] - tempC[0]) > 5):
+			tempC[0] = -100
+			tempC[1] = -100
+		else:
+			tempC_avg = (tempC[0] + tempC[1]) / 2
+			tempF = (tempC_avg * 1.8) + 32
 
 	# Upload temperature to ThingSpeak
-	payload = {'field1': tempF}
+	payload = {'field2': tempF}
 	r = requests.get(uploadUrl, payload);
 	
 	while (not r.ok):
